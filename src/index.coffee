@@ -49,10 +49,10 @@ module = @
   LTE: '<='
 
 @bin_op_name_cb_map =
-  BOOL_XOR      : (a, b)->"!!(#{a}^#{b})"
-  ASS_BOOL_AND  : (a, b)->"(#{a} = !!(#{a}&#{b}))"
-  ASS_BOOL_OR   : (a, b)->"(#{a} = !!(#{a}|#{b}))"
-  ASS_BOOL_XOR  : (a, b)->"(#{a} = !!(#{a}^#{b}))"
+  BOOL_XOR      : (a, b)->"!!(#{a} ^ #{b})"
+  ASS_BOOL_AND  : (a, b)->"(#{a} = !!(#{a} & #{b}))"
+  ASS_BOOL_OR   : (a, b)->"(#{a} = !!(#{a} | #{b}))"
+  ASS_BOOL_XOR  : (a, b)->"(#{a} = !!(#{a} ^ #{b}))"
   
 @un_op_name_cb_map =
   INC_RET : (a)->"++(#{a})"
@@ -100,10 +100,10 @@ module = @
       if op = module.bin_op_name_map[ast.op]
         "(#{_a} #{op} #{_b})"
       else
-        module.bin_op_name_map(_a, _b)
+        module.bin_op_name_cb_map[ast.op](_a, _b)
     
     when "Un_op"
-      module.un_op_name_cb_map gen ast.a
+      module.un_op_name_cb_map[ast.op] gen ast.a
     
     when "Fn_call"
       jl = []
@@ -116,19 +116,20 @@ module = @
     when "Scope"
       jl = []
       for v in ast.list
-        jl.push gen v
+        t = gen v
+        jl.push t if t != ''
       jl.join "\n"
     
     when "If"
       cond = gen ast.cond
-      t = gen t.t
-      f = gen t.f
-      if f = ''
+      t = gen ast.t
+      f = gen ast.f
+      if f == ''
         """
         if #{cond}
           #{make_tab t, '  '}
         """
-      else if t = ''
+      else if t == ''
         """
         unless #{cond}
           #{make_tab f, '  '}
@@ -151,14 +152,12 @@ module = @
           #{make_tab gen(v), '  '}
         """
       
-      f = gen t.f
-      tail = ""
-      if f
-        tail = """
+      if "" != f = gen ast.f
+        jl.push """
         else
           #{make_tab f, '  '}
         """
-      jl.push tail
+      
       """
       switch #{gen ast.cond}
         #{join_list jl, '  '}
@@ -200,8 +199,7 @@ module = @
       
       aux_k = ""
       if ast.k
-        aux_k = ", #{gen ast.k}"
-      ranger = if ast.exclusive then "..." else ".."
+        aux_k = ",#{gen ast.k}"
       """
       for #{aux_v}#{aux_k} in #{gen ast.t}
         #{make_tab gen(ast.scope), '  '}
@@ -215,7 +213,7 @@ module = @
       
       aux_v = ""
       if ast.v
-        aux_v = ", #{gen ast.v}"
+        aux_v = ",#{gen ast.v}"
       """
       for #{aux_k}#{aux_v} of #{gen ast.t}
         #{make_tab gen(ast.scope), '  '}
@@ -223,16 +221,16 @@ module = @
     
     when "Ret"
       aux = ""
-      if ast.expr
-        aux = " (#{gen ast.expr})"
+      if ast.t
+        aux = " (#{gen ast.t})"
       "return#{aux}"
     
     when "Try"
       """
       try
-        #{make_tab gen(ast.t) or '0', '  '}
+        #{make_tab gen(ast.t), '  '}
       catch #{ast.exception_var_name}
-        #{make_tab gen(ast.c) or '0', '  '}
+        #{make_tab gen(ast.c), '  '}
       """
     
     when "Throw"
