@@ -64,7 +64,13 @@ module = @
   MINUS   : (a)->"-(#{a})"
   PLUS    : (a)->"+(#{a})"
 
-@gen = gen = (ast)->
+class @Gen_context
+  in_class : false
+  mk_nest : ()->
+    t = new module.Gen_context
+    t
+
+@gen = gen = (ast, ctx = new module.Gen_context)->
   switch ast.constructor.name
     # ###################################################################################################
     #    expr
@@ -82,48 +88,48 @@ module = @
     when "Array_init"
       jl = []
       for v in ast.list
-        jl.push gen v
+        jl.push gen v, ctx
       "[#{jl.join ', '}]"
     
     when "Hash_init", "Struct_init"
       jl = []
       for k,v of ast.hash
-        jl.push "#{JSON.stringify k}: #{gen v}"
+        jl.push "#{JSON.stringify k}: #{gen v, ctx}"
       "{#{jl.join ', '}}"
     
     when "Var"
       ast.name
     
     when "Bin_op"
-      _a = gen ast.a
-      _b = gen ast.b
+      _a = gen ast.a, ctx
+      _b = gen ast.b, ctx
       if op = module.bin_op_name_map[ast.op]
         "(#{_a} #{op} #{_b})"
       else
         module.bin_op_name_cb_map[ast.op](_a, _b)
     
     when "Un_op"
-      module.un_op_name_cb_map[ast.op] gen ast.a
+      module.un_op_name_cb_map[ast.op] gen ast.a, ctx
     
     when "Fn_call"
       jl = []
       for v in ast.arg_list
-        jl.push gen v
-      "(#{gen ast.fn})(#{jl.join ', '})"
+        jl.push gen v, ctx
+      "(#{gen ast.fn, ctx})(#{jl.join ', '})"
     # ###################################################################################################
     #    stmt
     # ###################################################################################################
     when "Scope"
       jl = []
       for v in ast.list
-        t = gen v
+        t = gen v, ctx
         jl.push t if t != ''
       jl.join "\n"
     
     when "If"
-      cond = gen ast.cond
-      t = gen ast.t
-      f = gen ast.f
+      cond = gen ast.cond, ctx
+      t = gen ast.t, ctx
+      f = gen ast.f, ctx
       if f == ''
         """
         if #{cond}
@@ -149,30 +155,30 @@ module = @
           k = JSON.stringify k
         jl.push """
         when #{k}
-          #{make_tab gen(v), '  '}
+          #{make_tab gen(v, ctx) or '0', '  '}
         """
       
-      if "" != f = gen ast.f
+      if "" != f = gen ast.f, ctx
         jl.push """
         else
           #{make_tab f, '  '}
         """
       
       """
-      switch #{gen ast.cond}
+      switch #{gen ast.cond, ctx}
         #{join_list jl, '  '}
       """
     
     when "Loop"
       """
       loop
-        #{make_tab gen(ast.scope), '  '}
+        #{make_tab gen(ast.scope, ctx), '  '}
       """
     
     when "While"
       """
-      while #{gen ast.cond}
-        #{make_tab gen(ast.scope), '  '}
+      while #{gen ast.cond, ctx}
+        #{make_tab gen(ast.scope, ctx), '  '}
       """
     
     when "Break"
@@ -184,67 +190,79 @@ module = @
     when "For_range"
       aux_step = ""
       if ast.step
-        aux_step = " by #{gen ast.step}"
+        aux_step = " by #{gen ast.step, ctx}"
       ranger = if ast.exclusive then "..." else ".."
       """
-      for #{gen ast.i} in [#{gen ast.a} #{ranger} #{gen ast.b}]#{aux_step}
-        #{make_tab gen(ast.scope), '  '}
+      for #{gen ast.i, ctx} in [#{gen ast.a, ctx} #{ranger} #{gen ast.b, ctx}]#{aux_step}
+        #{make_tab gen(ast.scope, ctx), '  '}
       """
     
     when "For_array"
       if ast.v
-        aux_v = gen ast.v
+        aux_v = gen ast.v, ctx
       else
         aux_v = "_skip"
       
       aux_k = ""
       if ast.k
-        aux_k = ",#{gen ast.k}"
+        aux_k = ",#{gen ast.k, ctx}"
       """
-      for #{aux_v}#{aux_k} in #{gen ast.t}
-        #{make_tab gen(ast.scope), '  '}
+      for #{aux_v}#{aux_k} in #{gen ast.t, ctx}
+        #{make_tab gen(ast.scope, ctx), '  '}
       """
     
     when "For_hash"
       if ast.k
-        aux_k = gen ast.k
+        aux_k = gen ast.k, ctx
       else
         aux_k = "_skip"
       
       aux_v = ""
       if ast.v
-        aux_v = ",#{gen ast.v}"
+        aux_v = ",#{gen ast.v, ctx}"
       """
-      for #{aux_k}#{aux_v} of #{gen ast.t}
-        #{make_tab gen(ast.scope), '  '}
+      for #{aux_k}#{aux_v} of #{gen ast.t, ctx}
+        #{make_tab gen(ast.scope, ctx), '  '}
       """
     
     when "Ret"
       aux = ""
       if ast.t
-        aux = " (#{gen ast.t})"
+        aux = " (#{gen ast.t, ctx})"
       "return#{aux}"
     
     when "Try"
       """
       try
-        #{make_tab gen(ast.t), '  '}
+        #{make_tab gen(ast.t, ctx), '  '}
       catch #{ast.exception_var_name}
-        #{make_tab gen(ast.c), '  '}
+        #{make_tab gen(ast.c, ctx), '  '}
       """
     
     when "Throw"
-      "throw new Error(#{gen ast.t})"
+      "throw new Error(#{gen ast.t, ctx})"
     
     when "Var_decl"
       ""
     
     when "Class_decl"
-      "# TBD"
+      ctx_nest = ctx.mk_nest()
+      ctx_nest.in_class = true
+      """
+      class #{ast.name}
+        #{make_tab gen(ast.scope, ctx_nest), '  '}
+      """
     
     when "Fn_decl"
-      "# TBD"
-    
-    when "Closure_decl"
-      "# TBD"
+      arg_list = ast.arg_name_list
+      if ctx.in_class
+        """
+        #{ast.name} : (#{arg_list.join ', '})->
+          #{make_tab gen(ast.scope, ctx), '  '}
+        """
+      else
+        """
+        #{ast.name} = (#{arg_list.join ', '})->
+          #{make_tab gen(ast.scope, ctx), '  '}
+        """
     

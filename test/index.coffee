@@ -41,6 +41,14 @@ bin = (a, op, b)->
   t.op= op
   t
 
+fnd = (name, _type, arg_name_list, scope_list)->
+  t = new ast.Fn_decl
+  t.name = name
+  t.arg_name_list = arg_name_list
+  t.type = type _type
+  t.scope.list = scope_list
+  t
+
 describe 'index section', ()->
   it '@', ()->
     assert.equal gen(new ast.This), "@"
@@ -189,6 +197,22 @@ describe 'index section', ()->
       switch a
         when "k"
           b
+    '''
+    return
+  it 'switch a {k:b}{k2:0}', ()->
+    scope = new ast.Scope
+    a = var_d('a', scope, 'string')
+    b = var_d('b', scope)
+    scope.list.push t = new ast.Switch
+    t.cond = a
+    t.hash["k"] = b
+    t.hash["k2"] = new ast.Scope
+    assert.equal gen(scope), '''
+      switch a
+        when "k"
+          b
+        when "k2"
+          0
     '''
     return
   
@@ -442,3 +466,26 @@ describe 'index section', ()->
     t.t = cs 'err'
     assert.equal gen(scope), 'throw new Error("err")'
     return
+  
+  it 'Fn_decl', ()->
+    scope = new ast.Scope
+    scope.list.push fnd('fn', type('function<void>'), [], [])
+    assert.equal gen(scope), 'fn = ()->\n  '
+    
+  describe 'Class_decl', ()->
+    it 'Empty', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Class_decl
+      t.name = 'A'
+      assert.equal gen(scope), 'class A\n  '
+    
+    it 'Method', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Class_decl
+      t.name = 'A'
+      t.scope.list.push fnd('fn', type('function<void>'), [], [])
+      assert.equal gen(scope), '''
+        class A
+          fn : ()->
+            
+        '''
