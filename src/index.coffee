@@ -111,6 +111,9 @@ class @Gen_context
     when "Un_op"
       module.un_op_name_cb_map[ast.op] gen ast.a, ctx
     
+    when "Field_access"
+      "(#{gen(ast.t, ctx)}).#{ast.name}"
+    
     when "Fn_call"
       jl = []
       for v in ast.arg_list

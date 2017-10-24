@@ -49,6 +49,13 @@ fnd = (name, _type, arg_name_list, scope_list)->
   t.scope.list = scope_list
   t
 
+fa = (target, name, _type)->
+  t = new ast.Field_access
+  t.t = target
+  t.name = name
+  t.type = type _type
+  t
+
 describe 'index section', ()->
   it '@', ()->
     assert.equal gen(new ast.This), "@"
@@ -115,12 +122,36 @@ describe 'index section', ()->
     assert.equal gen(scope), "{}"
     return
   
-  it '[a]', ()->
+  it '{k:a}', ()->
     scope = new ast.Scope
     a = var_d('a', scope)
     scope.list.push t = new ast.Hash_init
     t.hash.k = a
     assert.equal gen(scope), '{"k": a}'
+    return
+  
+  it '{}', ()->
+    scope = new ast.Scope
+    scope.list.push t = new ast.Struct_init
+    assert.equal gen(scope), "{}"
+    return
+  
+  it '{k:a}', ()->
+    scope = new ast.Scope
+    a = var_d('a', scope)
+    scope.list.push t = new ast.Struct_init
+    t.hash.k = a
+    assert.equal gen(scope), '{"k": a}'
+    return
+  
+  it '{k:a}', ()->
+    scope = new ast.Scope
+    a = var_d('a', scope)
+    t = new ast.Struct_init
+    t.hash.k = a
+    
+    scope.list.push fa(t, 'k', 'int')
+    assert.equal gen(scope), '({"k": a}).k'
     return
   
   it 'a()', ()->
