@@ -1,6 +1,16 @@
 require 'fy/codegen'
 
 module = @
+@default_value_from_type =
+  'int'   : "0"
+  'float' : "0.0"
+  'string': "''"
+  'array' : "[]"
+  'hash'  : "{}"
+@need_constructor_reset =
+  'array' : true
+  'hash' : true
+
 @bin_op_name_map =
   ADD : '+'
   SUB : '-'
@@ -246,14 +256,32 @@ class @Gen_context
       "throw new Error(#{gen ast.t, ctx})"
     
     when "Var_decl"
-      ""
+      if ctx.in_class
+        "#{ast.name} : #{module.default_value_from_type[ast.type.main]}"
+      else
+        ""
     
     when "Class_decl"
       ctx_nest = ctx.mk_nest()
       ctx_nest.in_class = true
+      # TODO seek constructor code
+      constructor_jl = []
+      for v in ast.scope.list
+        switch v.constructor.name
+          when "Var_decl"
+            if module.need_constructor_reset[v.type.main]
+              constructor_jl.push "@#{v.name} = #{module.default_value_from_type[v.type.main]}"
+      aux_constructor = ""
+      if constructor_jl.length
+        aux_constructor = """
+        
+          constructor : ()->
+            #{join_list constructor_jl, '    '}
+        """
+      
       """
       class #{ast.name}
-        #{make_tab gen(ast.scope, ctx_nest), '  '}
+        #{make_tab gen(ast.scope, ctx_nest), '  '}#{aux_constructor}
       """
     
     when "Fn_decl"

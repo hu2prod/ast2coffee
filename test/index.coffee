@@ -510,6 +510,34 @@ describe 'index section', ()->
       t.name = 'A'
       assert.equal gen(scope), 'class A\n  '
     
+    _var_d = (name, _type)->
+      t = new ast.Var_decl
+      t.name = name
+      t.type = type _type
+      t
+    
+    it 'Var_decl', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Class_decl
+      t.name = 'A'
+      t.scope.list.push _var_d('a', 'int')
+      assert.equal gen(scope), '''
+        class A
+          a : 0
+        '''
+    
+    it 'Var_decl array', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Class_decl
+      t.name = 'A'
+      t.scope.list.push _var_d('a', 'array<int>')
+      assert.equal gen(scope), '''
+        class A
+          a : []
+          constructor : ()->
+            @a = []
+        '''
+    
     it 'Method', ()->
       scope = new ast.Scope
       scope.list.push t = new ast.Class_decl
