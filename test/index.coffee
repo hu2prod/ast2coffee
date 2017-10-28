@@ -508,7 +508,11 @@ describe 'index section', ()->
       scope = new ast.Scope
       scope.list.push t = new ast.Class_decl
       t.name = 'A'
-      assert.equal gen(scope), 'class A\n  '
+      assert.equal gen(scope), """
+        class A
+          
+        
+        """
     
     _var_d = (name, _type)->
       t = new ast.Var_decl
@@ -524,6 +528,7 @@ describe 'index section', ()->
       assert.equal gen(scope), '''
         class A
           a : 0
+        
         '''
     
     it 'Var_decl array', ()->
@@ -536,6 +541,7 @@ describe 'index section', ()->
           a : []
           constructor : ()->
             @a = []
+        
         '''
     
     it 'Method', ()->
@@ -547,4 +553,5 @@ describe 'index section', ()->
         class A
           fn : ()->
             
+        
         '''

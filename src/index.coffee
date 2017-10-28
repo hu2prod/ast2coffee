@@ -282,6 +282,7 @@ class @Gen_context
       """
       class #{ast.name}
         #{make_tab gen(ast.scope, ctx_nest), '  '}#{aux_constructor}
+      
       """
     
     when "Fn_decl"
