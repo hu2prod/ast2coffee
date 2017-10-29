@@ -57,10 +57,6 @@ fa = (target, name, _type)->
   t
 
 describe 'index section', ()->
-  it '@', ()->
-    assert.equal gen(new ast.This), "@"
-    return
-  
   it '1', ()->
     scope = new ast.Scope
     scope.list.push ci('1')
