@@ -16,6 +16,7 @@ module = @
   SUB : '-'
   MUL : '*'
   DIV : '/'
+  DIV_INT : '//'
   MOD : '%'
   POW : '**'
   
@@ -36,6 +37,7 @@ module = @
   ASS_SUB : '-='
   ASS_MUL : '*='
   ASS_DIV : '/='
+  ASS_DIV_INT : '//='
   ASS_MOD : '%='
   ASS_POW : '**='
   
