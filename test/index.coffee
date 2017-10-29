@@ -364,9 +364,10 @@ describe 'index section', ()->
     a = var_d('a', scope)
     b = var_d('b', scope)
     
-    scope.list.push t = new ast.For_array
+    scope.list.push t = new ast.For_col
     t.v = v
     t.t = a
+    t.t.type = new Type 'array<int>'
     t.scope.list.push b
     assert.equal gen(scope), '''
       for v in a
@@ -381,10 +382,11 @@ describe 'index section', ()->
     a = var_d('a', scope)
     b = var_d('b', scope)
     
-    scope.list.push t = new ast.For_array
+    scope.list.push t = new ast.For_col
     t.k = k
     t.v = v
     t.t = a
+    t.t.type = new Type 'array<int>'
     t.scope.list.push b
     assert.equal gen(scope), '''
       for v,k in a
@@ -398,9 +400,10 @@ describe 'index section', ()->
     a = var_d('a', scope)
     b = var_d('b', scope)
     
-    scope.list.push t = new ast.For_array
+    scope.list.push t = new ast.For_col
     t.k = k
     t.t = a
+    t.t.type = new Type 'array<int>'
     t.scope.list.push b
     assert.equal gen(scope), '''
       for _skip,k in a
@@ -414,9 +417,10 @@ describe 'index section', ()->
     a = var_d('a', scope)
     b = var_d('b', scope)
     
-    scope.list.push t = new ast.For_hash
+    scope.list.push t = new ast.For_col
     t.v = v
     t.t = a
+    t.t.type = new Type 'hash<int>'
     t.scope.list.push b
     assert.equal gen(scope), '''
       for _skip,v of a
@@ -431,10 +435,11 @@ describe 'index section', ()->
     a = var_d('a', scope)
     b = var_d('b', scope)
     
-    scope.list.push t = new ast.For_hash
+    scope.list.push t = new ast.For_col
     t.k = k
     t.v = v
     t.t = a
+    t.t.type = new Type 'hash<int>'
     t.scope.list.push b
     assert.equal gen(scope), '''
       for k,v of a
@@ -448,9 +453,10 @@ describe 'index section', ()->
     a = var_d('a', scope)
     b = var_d('b', scope)
     
-    scope.list.push t = new ast.For_hash
+    scope.list.push t = new ast.For_col
     t.k = k
     t.t = a
+    t.t.type = new Type 'hash<int>'
     t.scope.list.push b
     assert.equal gen(scope), '''
       for k of a

@@ -209,33 +209,33 @@ class @Gen_context
         #{make_tab gen(ast.scope, ctx), '  '}
       """
     
-    when "For_array"
-      if ast.v
-        aux_v = gen ast.v, ctx
+    when "For_col"
+      if ast.t.type.main == 'array'
+        if ast.v
+          aux_v = gen ast.v, ctx
+        else
+          aux_v = "_skip"
+        
+        aux_k = ""
+        if ast.k
+          aux_k = ",#{gen ast.k, ctx}"
+        """
+        for #{aux_v}#{aux_k} in #{gen ast.t, ctx}
+          #{make_tab gen(ast.scope, ctx), '  '}
+        """
       else
-        aux_v = "_skip"
-      
-      aux_k = ""
-      if ast.k
-        aux_k = ",#{gen ast.k, ctx}"
-      """
-      for #{aux_v}#{aux_k} in #{gen ast.t, ctx}
-        #{make_tab gen(ast.scope, ctx), '  '}
-      """
-    
-    when "For_hash"
-      if ast.k
-        aux_k = gen ast.k, ctx
-      else
-        aux_k = "_skip"
-      
-      aux_v = ""
-      if ast.v
-        aux_v = ",#{gen ast.v, ctx}"
-      """
-      for #{aux_k}#{aux_v} of #{gen ast.t, ctx}
-        #{make_tab gen(ast.scope, ctx), '  '}
-      """
+        if ast.k
+          aux_k = gen ast.k, ctx
+        else
+          aux_k = "_skip"
+        
+        aux_v = ""
+        if ast.v
+          aux_v = ",#{gen ast.v, ctx}"
+        """
+        for #{aux_k}#{aux_v} of #{gen ast.t, ctx}
+          #{make_tab gen(ast.scope, ctx), '  '}
+        """
     
     when "Ret"
       aux = ""
