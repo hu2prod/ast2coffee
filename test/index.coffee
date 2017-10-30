@@ -3,29 +3,34 @@ assert = require 'assert'
 mod = require '../src/index.coffee'
 gen = mod.gen
 Type = require 'type'
-type = (t)->new Type t
 ast = require 'ast4gen'
+
+_var = (name, _type='int')->
+  t = new ast.Var
+  t.name = name
+  t.type = new Type _type
+  t
 
 var_d = (name, scope, _type='int')->
   scope.list.push t = new ast.Var_decl
   t.name = name
-  t.type = type _type
+  t.type = new Type _type
   
   t = new ast.Var
   t.name = name
-  t.type = type _type
+  t.type = new Type _type
   t
 
 ci = (val)->
   t = new ast.Const
   t.val = val
-  t.type = type 'int'
+  t.type = new Type 'int'
   t
 
 cs = (val)->
   t = new ast.Const
   t.val = val
-  t.type = type 'string'
+  t.type = new Type 'string'
   t
 
 un = (a, op)->
@@ -45,7 +50,7 @@ fnd = (name, _type, arg_name_list, scope_list)->
   t = new ast.Fn_decl
   t.name = name
   t.arg_name_list = arg_name_list
-  t.type = type _type
+  t.type = new Type _type
   t.scope.list = scope_list
   t
 
@@ -53,7 +58,7 @@ fa = (target, name, _type)->
   t = new ast.Field_access
   t.t = target
   t.name = name
-  t.type = type _type
+  t.type = new Type _type
   t
 
 describe 'index section', ()->
@@ -75,28 +80,39 @@ describe 'index section', ()->
     assert.equal gen(scope), "a"
     return
   
-  it '+a', ()->
-    scope = new ast.Scope
-    a = var_d('a', scope)
-    scope.list.push un(a,"PLUS")
-    assert.equal gen(scope), "+(a)"
-    return
+  hash =
+    PLUS    : "+(a)"
+    INC_RET : "++(a)"
+    RET_INC : "(a)++"
+    DEC_RET : "--(a)"
+    RET_DEC : "(a)--"
+    BOOL_NOT: "!(a)"
+    BIT_NOT : "~(a)"
+    MINUS   : "-(a)"
+  for k,v of hash
+    do (k,v)->
+      it k, ()->
+        scope = new ast.Scope
+        a = var_d('a', scope)
+        scope.list.push un(a,k)
+        assert.equal gen(scope), v
+        return
   
-  it 'a+b', ()->
-    scope = new ast.Scope
-    a = var_d('a', scope)
-    b = var_d('b', scope)
-    scope.list.push bin(a,"ADD",b)
-    assert.equal gen(scope), "(a + b)"
-    return
-  
-  it 'a^b bool', ()->
-    scope = new ast.Scope
-    a = var_d('a', scope)
-    b = var_d('b', scope)
-    scope.list.push bin(a,"BOOL_XOR",b)
-    assert.equal gen(scope), "!!(a ^ b)"
-    return
+  hash =
+    ADD           : "(a + b)"
+    BOOL_XOR      : "!!(a ^ b)"
+    ASS_BOOL_AND  : "(a = !!(a & b))"
+    ASS_BOOL_OR   : "(a = !!(a | b))"
+    ASS_BOOL_XOR  : "(a = !!(a ^ b))"
+  for k,v of hash
+    do (k,v)->
+      it k, ()->
+        scope = new ast.Scope
+        a = var_d('a', scope)
+        b = var_d('b', scope)
+        scope.list.push bin(a,k,b)
+        assert.equal gen(scope), v
+        return
   
   it '[]', ()->
     scope = new ast.Scope
@@ -502,7 +518,7 @@ describe 'index section', ()->
   
   it 'Fn_decl', ()->
     scope = new ast.Scope
-    scope.list.push fnd('fn', type('function<void>'), [], [])
+    scope.list.push fnd('fn', new Type('function<void>'), [], [])
     assert.equal gen(scope), 'fn = ()->\n  '
     
   describe 'Class_decl', ()->
@@ -519,7 +535,7 @@ describe 'index section', ()->
     _var_d = (name, _type)->
       t = new ast.Var_decl
       t.name = name
-      t.type = type _type
+      t.type = new Type _type
       t
     
     it 'Var_decl', ()->
@@ -550,10 +566,80 @@ describe 'index section', ()->
       scope = new ast.Scope
       scope.list.push t = new ast.Class_decl
       t.name = 'A'
-      t.scope.list.push fnd('fn', type('function<void>'), [], [])
+      t.scope.list.push fnd('fn', new Type('function<void>'), [], [])
       assert.equal gen(scope), '''
         class A
           fn : ()->
             
         
         '''
+  
+  describe 'array API', ()->
+    it 'remove_idx', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<int>'
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<int>'), "remove_idx")
+      t.arg_list.push ci '1'
+      
+      assert.equal gen(scope), '''
+        ((a).remove_idx)(1)
+        '''
+    
+    it 'length_get', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<int>'
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<int>'), "length_get")
+      
+      assert.equal gen(scope), '''
+        (a).length
+        '''
+    
+    it 'length_set', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<int>'
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<int>'), "length_set")
+      t.arg_list.push ci '1'
+      
+      assert.equal gen(scope), '''
+        (a).length = 1
+        '''
+    
+    it 'slice', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<int>'
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<int>'), "slice")
+      t.arg_list.push ci '1'
+      t.arg_list.push ci '2'
+      
+      assert.equal gen(scope), '''
+        ((a).slice)(1, 2)
+        '''
+    describe 'throws', ()->
+      it 'wtf method', ()->
+        scope = new ast.Scope
+        scope.list.push t = new ast.Var_decl
+        t.name = 'a'
+        t.type = new Type 'array<int>'
+        
+        scope.list.push t = new ast.Fn_call
+        t.fn = fa(_var('a', 'array<int>'), "wtf")
+        t.arg_list.push ci '1'
+        t.arg_list.push ci '2'
+        
+        assert.throws ()-> gen(scope)

@@ -124,10 +124,29 @@ class @Gen_context
       "(#{gen(ast.t, ctx)}).#{ast.name}"
     
     when "Fn_call"
-      jl = []
-      for v in ast.arg_list
-        jl.push gen v, ctx
-      "(#{gen ast.fn, ctx})(#{jl.join ', '})"
+      ret = ""
+      if ast.fn.constructor.name == 'Field_access'
+        t = ast.fn.t
+        ret = switch t.type.main
+          when 'array'
+            switch ast.fn.name
+              when 'remove_idx', 'slice'
+                ""# pass
+              when 'length_set'
+                "(#{gen t, ctx}).length = #{gen ast.arg_list[0], ctx}"
+              when 'length_get'
+                "(#{gen t, ctx}).length"
+              else
+                throw new Error "unsupported array method '#{ast.fn.name}'"
+          else
+            ""
+      
+      if !ret
+        jl = []
+        for v in ast.arg_list
+          jl.push gen v, ctx
+        ret = "(#{gen ast.fn, ctx})(#{jl.join ', '})"
+      ret
     # ###################################################################################################
     #    stmt
     # ###################################################################################################
