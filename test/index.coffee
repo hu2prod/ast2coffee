@@ -616,6 +616,33 @@ describe 'index section', ()->
         (a).length = 1
         '''
     
+    it 'pop', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<int>'
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<int>'), "pop")
+      
+      assert.equal gen(scope), '''
+        ((a).pop)()
+        '''
+    
+    it 'push', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<int>'
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<int>'), "push")
+      t.arg_list.push ci '1'
+      
+      assert.equal gen(scope), '''
+        ((a).push)(1)
+        '''
+    
     it 'slice', ()->
       scope = new ast.Scope
       scope.list.push t = new ast.Var_decl
@@ -630,6 +657,35 @@ describe 'index section', ()->
       assert.equal gen(scope), '''
         ((a).slice)(1, 2)
         '''
+    
+    it 'remove', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<int>'
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<int>'), "remove")
+      t.arg_list.push ci '1'
+      
+      assert.equal gen(scope), '''
+        ((a).remove)(1)
+        '''
+    
+    it 'idx', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<int>'
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<int>'), "idx")
+      t.arg_list.push ci '1'
+      
+      assert.equal gen(scope), '''
+        ((a).idx)(1)
+        '''
+    
     describe 'throws', ()->
       it 'wtf method', ()->
         scope = new ast.Scope

@@ -130,7 +130,7 @@ class @Gen_context
         ret = switch t.type.main
           when 'array'
             switch ast.fn.name
-              when 'remove_idx', 'slice'
+              when 'remove_idx', 'slice', 'pop', 'push', 'remove', 'idx'
                 ""# pass
               when 'length_set'
                 "(#{gen t, ctx}).length = #{gen ast.arg_list[0], ctx}"
