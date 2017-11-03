@@ -575,6 +575,20 @@ describe 'index section', ()->
         
         '''
     
+    it 'Method var decl', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Class_decl
+      t.name = 'A'
+      t.scope.list.push fnd('fn', new Type('function<void>'), [], [
+        _var_d('a', 'int')
+      ])
+      assert.equal gen(scope), '''
+        class A
+          fn : ()->
+            
+        
+        '''
+    
     it 'Method call', ()->
       scope = new ast.Scope
       scope.list.push t = new ast.Class_decl

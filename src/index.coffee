@@ -306,14 +306,16 @@ class @Gen_context
     
     when "Fn_decl"
       arg_list = ast.arg_name_list
+      ctx_nest = ctx.mk_nest()
+      ctx_nest.in_class = false
       if ctx.in_class
         """
         #{ast.name} : (#{arg_list.join ', '})->
-          #{make_tab gen(ast.scope, ctx), '  '}
+          #{make_tab gen(ast.scope, ctx_nest), '  '}
         """
       else
         """
         #{ast.name} = (#{arg_list.join ', '})->
-          #{make_tab gen(ast.scope, ctx), '  '}
+          #{make_tab gen(ast.scope, ctx_nest), '  '}
         """
     
