@@ -104,6 +104,7 @@ describe 'index section', ()->
     ASS_BOOL_AND  : "(a = !!(a & b))"
     ASS_BOOL_OR   : "(a = !!(a | b))"
     ASS_BOOL_XOR  : "(a = !!(a ^ b))"
+    INDEX_ACCESS  : "(a)[b]"
   for k,v of hash
     do (k,v)->
       it k, ()->
@@ -572,6 +573,23 @@ describe 'index section', ()->
           fn : ()->
             
         
+        '''
+    
+    it 'Method call', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Class_decl
+      t.name = 'A'
+      t.scope.list.push fnd('fn', new Type('function<void>'), [], [])
+      scope.list.push _var_d('a', 'A')
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'A'), "fn")
+      assert.equal gen(scope), '''
+        class A
+          fn : ()->
+            
+        
+        ((a).fn)()
         '''
   
   describe 'array API', ()->

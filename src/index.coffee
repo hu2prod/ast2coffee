@@ -65,6 +65,7 @@ module = @
   ASS_BOOL_AND  : (a, b)->"(#{a} = !!(#{a} & #{b}))"
   ASS_BOOL_OR   : (a, b)->"(#{a} = !!(#{a} | #{b}))"
   ASS_BOOL_XOR  : (a, b)->"(#{a} = !!(#{a} ^ #{b}))"
+  INDEX_ACCESS  : (a, b)->"(#{a})[#{b}]"
   
 @un_op_name_cb_map =
   INC_RET : (a)->"++(#{a})"
