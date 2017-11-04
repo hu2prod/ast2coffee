@@ -605,8 +605,37 @@ describe 'index section', ()->
         
         ((a).fn)()
         '''
+    
+    it 'constructor', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Class_decl
+      t.name = 'A'
+      t.scope.list.push fnd('fn', new Type('function<void>'), [], [])
+      scope.list.push _var_d('a', 'A')
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'A'), "new")
+      assert.equal gen(scope), '''
+        class A
+          fn : ()->
+            
+        
+        (a) = new A
+        '''
   
   describe 'array API', ()->
+    it 'new', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<int>'
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<int>'), "new")
+      
+      assert.equal gen(scope), '''
+        (a) = []
+        '''
     it 'remove_idx', ()->
       scope = new ast.Scope
       scope.list.push t = new ast.Var_decl
@@ -727,6 +756,34 @@ describe 'index section', ()->
         
         scope.list.push t = new ast.Fn_call
         t.fn = fa(_var('a', 'array<int>'), "wtf")
+        t.arg_list.push ci '1'
+        t.arg_list.push ci '2'
+        
+        assert.throws ()-> gen(scope)
+  
+  describe 'hash API', ()->
+    it 'new', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'hash<int>'
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'hash<int>'), "new")
+      
+      assert.equal gen(scope), '''
+        (a) = {}
+        '''
+    
+    describe 'throws', ()->
+      it 'wtf method', ()->
+        scope = new ast.Scope
+        scope.list.push t = new ast.Var_decl
+        t.name = 'a'
+        t.type = new Type 'hash<int>'
+        
+        scope.list.push t = new ast.Fn_call
+        t.fn = fa(_var('a', 'hash<int>'), "wtf")
         t.arg_list.push ci '1'
         t.arg_list.push ci '2'
         

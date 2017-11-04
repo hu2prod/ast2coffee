@@ -133,14 +133,25 @@ class @Gen_context
             switch ast.fn.name
               when 'remove_idx', 'slice', 'pop', 'push', 'remove', 'idx'
                 ""# pass
+              when 'new'
+                "(#{gen t, ctx}) = []"
               when 'length_set'
                 "(#{gen t, ctx}).length = #{gen ast.arg_list[0], ctx}"
               when 'length_get'
                 "(#{gen t, ctx}).length"
               else
                 throw new Error "unsupported array method '#{ast.fn.name}'"
+          when 'hash'
+            switch ast.fn.name
+              when 'new'
+                "(#{gen t, ctx}) = {}"
+              else
+                throw new Error "unsupported array method '#{ast.fn.name}'"
           else
-            ""
+            if ast.fn.name == 'new'
+              "(#{gen t, ctx}) = new #{t.type.main}"
+            else
+              ""
       
       if !ret
         jl = []
