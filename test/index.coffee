@@ -778,6 +778,32 @@ describe 'index section', ()->
         ((a).clone)()
         '''
     
+    it 'sort_by', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<string>'
+      scope.list.push t = new ast.Var_decl
+      
+      scope.list.push fnd('fn', new Type('function<int, string>'), ['a'], [
+        (()->
+          ret = new ast.Ret
+          ret.t = ci '1'
+          ret
+        )()
+      ])
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<string>'), "sort_by")
+      t.arg_list.push _var('fn', 'function<int, string>')
+      
+      assert.equal gen(scope), '''
+        fn = (a)->
+          return (1)
+        _sort_by = fn
+        (a).sort (a,b)->_sort_by(a)-_sort_by(b)
+        '''
+    
     describe 'throws', ()->
       it 'wtf method', ()->
         scope = new ast.Scope
