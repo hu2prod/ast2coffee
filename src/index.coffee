@@ -131,7 +131,7 @@ class @Gen_context
         ret = switch t.type.main
           when 'array'
             switch ast.fn.name
-              when 'remove_idx', 'slice', 'pop', 'push', 'remove', 'idx', 'append', 'clone', 'sort'
+              when 'remove_idx', 'slice', 'pop', 'push', 'remove', 'idx', 'append', 'clone', 'sort_i', 'sort_f'
                 ""# pass
               when 'new'
                 "(#{gen t, ctx}) = []"
@@ -139,11 +139,17 @@ class @Gen_context
                 "(#{gen t, ctx}).length = #{gen ast.arg_list[0], ctx}"
               when 'length_get'
                 "(#{gen t, ctx}).length"
-              when 'sort_by'
+              when 'sort_by_i', 'sort_by_f'
                 # !!! NON OPTIMAL !!!
                 """
                 _sort_by = #{gen ast.arg_list[0], ctx}
                 (#{gen t, ctx}).sort (a,b)->_sort_by(a)-_sort_by(b)
+                """
+              when 'sort_by_s'
+                # !!! NON OPTIMAL !!!
+                """
+                _sort_by = #{gen ast.arg_list[0], ctx}
+                (#{gen t, ctx}).sort (a,b)->_sort_by(a).localeCompare _sort_by(b)
                 """
               else
                 throw new Error "unsupported array method '#{ast.fn.name}'"

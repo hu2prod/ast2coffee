@@ -778,7 +778,7 @@ describe 'index section', ()->
         ((a).clone)()
         '''
     
-    it 'sort_by', ()->
+    it 'sort_by_i', ()->
       scope = new ast.Scope
       scope.list.push t = new ast.Var_decl
       t.name = 'a'
@@ -794,7 +794,7 @@ describe 'index section', ()->
       ])
       
       scope.list.push t = new ast.Fn_call
-      t.fn = fa(_var('a', 'array<string>'), "sort_by")
+      t.fn = fa(_var('a', 'array<string>'), "sort_by_i")
       t.arg_list.push _var('fn', 'function<int, string>')
       
       assert.equal gen(scope), '''
@@ -802,6 +802,31 @@ describe 'index section', ()->
           return (1)
         _sort_by = fn
         (a).sort (a,b)->_sort_by(a)-_sort_by(b)
+        '''
+    
+    it 'sort_by_s', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<string>'
+      scope.list.push t = new ast.Var_decl
+      
+      scope.list.push fnd('fn', new Type('function<string, string>'), ['a'], [(()->
+          ret = new ast.Ret
+          ret.t = _var 'a', 'string'
+          ret
+        )()
+      ])
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<string>'), "sort_by_s")
+      t.arg_list.push _var('fn', 'function<int, string>')
+      
+      assert.equal gen(scope), '''
+        fn = (a)->
+          return (a)
+        _sort_by = fn
+        (a).sort (a,b)->_sort_by(a).localeCompare _sort_by(b)
         '''
     
     describe 'throws', ()->
