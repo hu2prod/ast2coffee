@@ -764,6 +764,20 @@ describe 'index section', ()->
         ((a).append)(b)
         '''
     
+    it 'clone', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<int>'
+      scope.list.push t = new ast.Var_decl
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<int>'), "clone")
+      
+      assert.equal gen(scope), '''
+        ((a).clone)()
+        '''
+    
     describe 'throws', ()->
       it 'wtf method', ()->
         scope = new ast.Scope
