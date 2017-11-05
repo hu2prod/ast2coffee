@@ -778,6 +778,31 @@ describe 'index section', ()->
         ((a).clone)()
         '''
     
+    it 'sort_i', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<string>'
+      scope.list.push t = new ast.Var_decl
+      
+      scope.list.push fnd('fn', new Type('function<int, int, int>'), ['a', 'b'], [
+        (()->
+          ret = new ast.Ret
+          ret.t = ci '1'
+          ret
+        )()
+      ])
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<string>'), "sort_i")
+      t.arg_list.push _var('fn', 'function<int, int, int>')
+      
+      assert.equal gen(scope), '''
+        fn = (a, b)->
+          return (1)
+        ((a).sort)(fn)
+        '''
+    
     it 'sort_by_i', ()->
       scope = new ast.Scope
       scope.list.push t = new ast.Var_decl

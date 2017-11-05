@@ -131,7 +131,7 @@ class @Gen_context
         ret = switch t.type.main
           when 'array'
             switch ast.fn.name
-              when 'remove_idx', 'slice', 'pop', 'push', 'remove', 'idx', 'append', 'clone', 'sort_i', 'sort_f'
+              when 'remove_idx', 'slice', 'pop', 'push', 'remove', 'idx', 'append', 'clone'
                 ""# pass
               when 'new'
                 "(#{gen t, ctx}) = []"
@@ -139,6 +139,8 @@ class @Gen_context
                 "(#{gen t, ctx}).length = #{gen ast.arg_list[0], ctx}"
               when 'length_get'
                 "(#{gen t, ctx}).length"
+              when 'sort_i', 'sort_f'
+                "((#{gen t, ctx}).sort)(#{gen ast.arg_list[0], ctx})"
               when 'sort_by_i', 'sort_by_f'
                 # !!! NON OPTIMAL !!!
                 """
