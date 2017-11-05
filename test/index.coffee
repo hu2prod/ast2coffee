@@ -747,6 +747,23 @@ describe 'index section', ()->
         ((a).idx)(1)
         '''
     
+    it 'append', ()->
+      scope = new ast.Scope
+      scope.list.push t = new ast.Var_decl
+      t.name = 'a'
+      t.type = new Type 'array<int>'
+      scope.list.push t = new ast.Var_decl
+      t.name = 'b'
+      t.type = new Type 'array<int>'
+      
+      scope.list.push t = new ast.Fn_call
+      t.fn = fa(_var('a', 'array<int>'), "append")
+      t.arg_list.push _var('b', 'array<int>')
+      
+      assert.equal gen(scope), '''
+        ((a).append)(b)
+        '''
+    
     describe 'throws', ()->
       it 'wtf method', ()->
         scope = new ast.Scope

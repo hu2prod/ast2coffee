@@ -131,7 +131,7 @@ class @Gen_context
         ret = switch t.type.main
           when 'array'
             switch ast.fn.name
-              when 'remove_idx', 'slice', 'pop', 'push', 'remove', 'idx'
+              when 'remove_idx', 'slice', 'pop', 'push', 'remove', 'idx', 'append'
                 ""# pass
               when 'new'
                 "(#{gen t, ctx}) = []"
