@@ -521,6 +521,11 @@ describe 'index section', ()->
     scope = new ast.Scope
     scope.list.push fnd('fn', new Type('function<void>'), [], [])
     assert.equal gen(scope), 'fn = ()->\n  '
+  it 'Fn_decl', ()->
+    scope = new ast.Scope
+    scope.list.push t = fnd('fn', new Type('function<void>'), [], [])
+    t.is_closure = true
+    assert.equal gen(scope), '()->\n  '
     
   describe 'Class_decl', ()->
     it 'Empty', ()->

@@ -154,13 +154,13 @@ class @Gen_context
                 (#{gen t, ctx}).sort (a,b)->_sort_by(a).localeCompare _sort_by(b)
                 """
               else
-                throw new Error "unsupported array method '#{ast.fn.name}'"
+                throw new Error "unsupported #{t.type.main} method '#{ast.fn.name}'"
           when 'hash'
             switch ast.fn.name
               when 'new'
                 "(#{gen t, ctx}) = {}"
               else
-                throw new Error "unsupported array method '#{ast.fn.name}'"
+                throw new Error "unsupported #{t.type.main} method '#{ast.fn.name}'"
           else
             if ast.fn.name == 'new'
               "(#{gen t, ctx}) = new #{t.type.main}"
@@ -333,7 +333,12 @@ class @Gen_context
       arg_list = ast.arg_name_list
       ctx_nest = ctx.mk_nest()
       ctx_nest.in_class = false
-      if ctx.in_class
+      if ast.is_closure
+        """
+        (#{arg_list.join ', '})->
+          #{make_tab gen(ast.scope, ctx_nest), '  '}
+        """
+      else if ctx.in_class
         """
         #{ast.name} : (#{arg_list.join ', '})->
           #{make_tab gen(ast.scope, ctx_nest), '  '}
