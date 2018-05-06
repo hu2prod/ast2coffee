@@ -198,12 +198,19 @@ class @Gen_context
           #{make_tab f, '  '}
         """
       else
-        """
-        if #{cond}
-          #{make_tab t, '  '}
+        if ast.f.list[0]?.constructor.name == 'If'
+          """
+          if #{cond}
+            #{make_tab t, '  '}
+          else #{f}
+          """
         else
-          #{make_tab f, '  '}
-        """
+          """
+          if #{cond}
+            #{make_tab t, '  '}
+          else
+            #{make_tab f, '  '}
+          """
     
     when "Switch"
       jl = []

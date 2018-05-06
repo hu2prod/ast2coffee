@@ -229,6 +229,27 @@ describe 'index section', ()->
         c
     '''
     return
+  
+  it 'if a {b} {c}', ()->
+    scope = new ast.Scope
+    a = var_d('a', scope)
+    b = var_d('b', scope)
+    
+    sub_if = new ast.If
+    sub_if.cond = a
+    sub_if.t.list.push b
+    
+    scope.list.push t = new ast.If
+    t.cond = a
+    t.t.list.push b
+    t.f.list.push sub_if
+    assert.equal gen(scope), '''
+      if a
+        b
+      else if a
+        b
+    '''
+    return
   # ###################################################################################################
   it 'switch a {k:b}', ()->
     scope = new ast.Scope
