@@ -107,7 +107,7 @@ class @Gen_context
       for k,v of ast.hash
         jl.push "#{JSON.stringify k}: #{gen v, ctx}"
       if ctx.expand_hash
-        if jl.length
+        if jl.length == 0
           "{}"
         else
           """
