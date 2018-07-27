@@ -78,6 +78,7 @@ module = @
   PLUS    : (a)->"+(#{a})"
 
 class @Gen_context
+  expand_hash : false
   in_class : false
   mk_nest : ()->
     t = new module.Gen_context
@@ -105,7 +106,17 @@ class @Gen_context
       jl = []
       for k,v of ast.hash
         jl.push "#{JSON.stringify k}: #{gen v, ctx}"
-      "{#{jl.join ', '}}"
+      if ctx.expand_hash
+        if jl.length
+          "{}"
+        else
+          """
+          {
+            #{join_list jl, '  '}
+          }
+          """
+      else
+        "{#{jl.join ', '}}"
     
     when "Var"
       ast.name
