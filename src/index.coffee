@@ -367,3 +367,5 @@ class @Gen_context
           #{make_tab gen(ast.scope, ctx_nest), '  '}
         """
     
+    else
+      throw new Error "unknown ast.constructor.name=#{ast.constructor.name}"
